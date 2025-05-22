@@ -2315,7 +2315,7 @@ module Product::Notifications
   end
 
   def back_in_stock?
-    inventory_count_previously_was == 0 && inventory_count > 0
+    inventory_count_previously_was.zero? && inventory_count > 0
   end
 
   def notify_subscribers
@@ -2533,6 +2533,8 @@ pin "@hotwired/turbo-rails", to: "turbo.min.js"
 pin "@hotwired/stimulus", to: "stimulus.min.js"
 pin "@hotwired/stimulus-loading", to: "stimulus-loading.js"
 pin_all_from "app/javascript/controllers", under: "controllers"
+pin "trix"
+pin "@rails/actiontext", to: "actiontext.esm.js"
 ```
 
 TIP: Each pin maps a JavaScript package name (e.g., `"@hotwired/turbo-rails"`)
