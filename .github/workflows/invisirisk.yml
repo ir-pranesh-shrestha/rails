@@ -2,7 +2,7 @@ name: RUBY x InvisiRisk
 
 on:
   schedule:
-    - cron: '45 2 * * *'  # Runs daily at 8:30 AM Nepal Time
+    - cron: '5 1 * * 1'  # every Monday morning
   workflow_dispatch:
 
 permissions:
