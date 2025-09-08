@@ -1,3 +1,161 @@
+## Rails 8.1.0.beta1 (September 04, 2025) ##
+
+*   Remove deprecated support to a route to multiple paths.
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated support for using semicolons as a query string separator.
+
+    Before:
+
+    ```ruby
+    ActionDispatch::QueryParser.each_pair("foo=bar;baz=quux").to_a
+    # => [["foo", "bar"], ["baz", "quux"]]
+    ```
+
+    After:
+
+    ```ruby
+    ActionDispatch::QueryParser.each_pair("foo=bar;baz=quux").to_a
+    # => [["foo", "bar;baz=quux"]]
+    ```
+
+    *Rafael Mendonça França*
+
+*   Remove deprecated support to skipping over leading brackets in parameter names in the parameter parser.
+
+    Before:
+
+    ```ruby
+    ActionDispatch::ParamBuilder.from_query_string("[foo]=bar") # => { "foo" => "bar" }
+    ActionDispatch::ParamBuilder.from_query_string("[foo][bar]=baz") # => { "foo" => { "bar" => "baz" } }
+    ```
+
+    After:
+
+    ```ruby
+    ActionDispatch::ParamBuilder.from_query_string("[foo]=bar") # => { "[foo]" => "bar" }
+    ActionDispatch::ParamBuilder.from_query_string("[foo][bar]=baz") # => { "[foo]" => { "bar" => "baz" } }
+    ```
+
+    *Rafael Mendonça França*
+
+*   Deprecate `Rails.application.config.action_dispatch.ignore_leading_brackets`.
+
+    *Rafael Mendonça França*
+
+*   Raise `ActionController::TooManyRequests` error from `ActionController::RateLimiting`
+
+    Requests that exceed the rate limit raise an `ActionController::TooManyRequests` error.
+    By default, Action Dispatch rescues the error and responds with a `429 Too Many Requests` status.
+
+    *Sean Doyle*
+
+*   Add .md/.markdown as Markdown extensions and add a default `markdown:` renderer:
+
+    ```ruby
+    class Page
+      def to_markdown
+        body
+      end
+    end
+
+    class PagesController < ActionController::Base
+      def show
+        @page = Page.find(params[:id])
+
+        respond_to do |format|
+          format.html
+          format.md { render markdown: @page }
+        end
+      end
+    end
+    ```
+
+    *DHH*
+
+*   Add headers to engine routes inspection command
+
+    *Petrik de Heus*
+
+*   Add "Copy as text" button to error pages
+
+    *Mikkel Malmberg*
+
+*   Add `scope:` option to `rate_limit` method.
+
+    Previously, it was not possible to share a rate limit count between several controllers, since the count was by
+    default separate for each controller.
+
+    Now, the `scope:` option solves this problem.
+
+    ```ruby
+    class APIController < ActionController::API
+      rate_limit to: 2, within: 2.seconds, scope: "api"
+    end
+
+    class API::PostsController < APIController
+      # ...
+    end
+
+    class API::UsersController < APIController
+      # ...
+    end
+    ```
+
+    *ArthurPV*, *Kamil Hanus*
+
+*   Add support for `rack.response_finished` callbacks in ActionDispatch::Executor.
+
+    The executor middleware now supports deferring completion callbacks to later
+    in the request lifecycle by utilizing Rack's `rack.response_finished` mechanism,
+    when available. This enables applications to define `rack.response_finished` callbacks
+    that may rely on state that would be cleaned up by the executor's completion callbacks.
+
+    *Adrianna Chang*, *Hartley McGuire*
+
+*   Produce a log when `rescue_from` is invoked.
+
+    *Steven Webb*, *Jean Boussier*
+
+*   Allow hosts redirects from `hosts` Rails configuration
+
+    ```ruby
+    config.action_controller.allowed_redirect_hosts << "example.com"
+    ```
+
+    *Kevin Robatel*
+
+*   `rate_limit.action_controller` notification has additional payload
+
+    additional values: count, to, within, by, name, cache_key
+
+    *Jonathan Rochkind*
+
+*   Add JSON support to the built-in health controller.
+
+    The health controller now responds to JSON requests with a structured response
+    containing status and timestamp information. This makes it easier for monitoring
+    tools and load balancers to consume health check data programmatically.
+
+    ```ruby
+    # /up.json
+    {
+      "status": "up",
+      "timestamp": "2025-09-19T12:00:00Z"
+    }
+    ```
+
+    *Francesco Loreti*, *Juan Vásquez*
+
+*   Allow to open source file with a crash from the browser.
+
+    *Igor Kasyanchuk*
+
+*   Always check query string keys for valid encoding just like values are checked.
+
+    *Casper Smits*
+
 *   Always return empty body for HEAD requests in `PublicExceptions` and
     `DebugExceptions`.
 
@@ -157,6 +315,19 @@
     ```
 
     *Jeremy Green*
+
+*   A route pointing to a non-existing controller now returns a 500 instead of a 404.
+
+    A controller not existing isn't a routing error that should result
+    in a 404, but a programming error that should result in a 500 and
+    be reported.
+
+    Until recently, this was hard to untangle because of the support
+    for dynamic `:controller` segment in routes, but since this is
+    deprecated and will be removed in Rails 8.1, we can now easily
+    not consider missing controllers as routing errors.
+
+    *Jean Boussier*
 
 *   Add `check_collisions` option to `ActionDispatch::Session::CacheStore`.
 

@@ -292,6 +292,14 @@ module ActiveRecord
   class NotNullViolation < StatementInvalid
   end
 
+  # Raised when a record cannot be inserted or updated because it would violate a check constraint.
+  class CheckViolation < StatementInvalid
+  end
+
+  # Raised when a record cannot be inserted or updated because it would violate an exclusion constraint.
+  class ExclusionViolation < StatementInvalid
+  end
+
   # Raised when a record cannot be inserted or updated because a value too long for a column type.
   class ValueTooLong < StatementInvalid
   end
@@ -552,6 +560,11 @@ module ActiveRecord
   class Deadlocked < TransactionRollbackError
   end
 
+  # MissingRequiredOrderError is raised when a relation requires ordering but
+  # lacks any +order+ values in scope or any model order columns to use.
+  class MissingRequiredOrderError < ActiveRecordError
+  end
+
   # IrreversibleOrderError is raised when a relation's order is too complex for
   # +reverse_order+ to automatically reverse.
   class IrreversibleOrderError < ActiveRecordError
@@ -608,6 +621,9 @@ module ActiveRecord
   # DatabaseVersionError will be raised when the database version is not supported, or when
   # the database version cannot be determined.
   class DatabaseVersionError < ActiveRecordError
+  end
+
+  class DeprecatedAssociationError < ActiveRecordError
   end
 end
 

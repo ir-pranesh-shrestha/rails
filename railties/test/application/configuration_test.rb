@@ -2903,6 +2903,25 @@ module ApplicationTests
       assert_equal true, ActiveRecord.verify_foreign_keys_for_fixtures
     end
 
+    test "Deprecated Associations can be configured via config.active_record.deprecated_associations_options" do
+      original_options = ActiveRecord.deprecated_associations_options
+
+      # Make sure we test something.
+      assert_not_equal :notify, original_options[:mode]
+      assert_not original_options[:backtrace]
+
+      add_to_config <<-RUBY
+        config.active_record.deprecated_associations_options = { mode: :notify, backtrace: true }
+      RUBY
+
+      app "development"
+
+      assert_equal :notify, ActiveRecord.deprecated_associations_options[:mode]
+      assert ActiveRecord.deprecated_associations_options[:backtrace]
+    ensure
+      ActiveRecord.deprecated_associations_options = original_options
+    end
+
     test "ActiveRecord::Base.run_commit_callbacks_on_first_saved_instances_in_transaction is false by default for new apps" do
       app "development"
 
@@ -3219,7 +3238,11 @@ module ApplicationTests
     end
 
     test "custom serializers should be able to set via config.active_job.custom_serializers in an initializer" do
-      class ::DummySerializer < ActiveJob::Serializers::ObjectSerializer; end
+      class ::DummySerializer < ActiveJob::Serializers::ObjectSerializer
+        def klass
+          nil
+        end
+      end
 
       app_file "config/initializers/custom_serializers.rb", <<-RUBY
       Rails.application.config.active_job.custom_serializers << DummySerializer
@@ -3227,7 +3250,11 @@ module ApplicationTests
 
       app "development"
 
-      assert_includes ActiveJob::Serializers.serializers, DummySerializer
+      assert_nothing_raised do
+        ActiveJob::Base
+      end
+
+      assert_includes ActiveJob::Serializers.serializers, DummySerializer.instance
     end
 
     test "config.active_job.verbose_enqueue_logs defaults to true in development" do
@@ -3245,8 +3272,8 @@ module ApplicationTests
     end
 
     test "config.active_job.enqueue_after_transaction_commit is deprecated" do
-      app_file "config/initializers/custom_serializers.rb", <<-RUBY
-      Rails.application.config.active_job.enqueue_after_transaction_commit = :always
+      app_file "config/initializers/enqueue_after_transaction_commit.rb", <<-RUBY
+      Rails.application.config.active_job.enqueue_after_transaction_commit = true
       RUBY
 
       app "production"
@@ -3255,7 +3282,7 @@ module ApplicationTests
         ActiveRecord::Base
       end
 
-      assert_equal true, ActiveJob::Base.enqueue_after_transaction_commit
+      assert_equal false, ActiveJob::Base.enqueue_after_transaction_commit
     end
 
     test "active record job queue is set" do
@@ -4071,7 +4098,6 @@ module ApplicationTests
       output = rails("routes", "-g", "active_storage")
       assert_equal <<~MESSAGE, output
                                Prefix Verb URI Pattern                                                                        Controller#Action
-                                           /:controller(/:action(/:id))(.:format)                                             :controller#:action
                    rails_service_blob GET  /files/blobs/redirect/:signed_id/*filename(.:format)                               active_storage/blobs/redirect#show
              rails_service_blob_proxy GET  /files/blobs/proxy/:signed_id/*filename(.:format)                                  active_storage/blobs/proxy#show
                                       GET  /files/blobs/:signed_id/*filename(.:format)                                        active_storage/blobs/redirect#show

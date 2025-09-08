@@ -1,3 +1,25 @@
+## Rails 8.1.0.beta1 (September 04, 2025) ##
+
+*   Add command `rails credentials:fetch PATH` to get the value of a credential from the credentials file.
+
+    ```bash
+    $ bin/rails credentials:fetch kamal_registry.password
+    ```
+
+    *Matthew Nguyen*, *Jean Boussier*
+
+*   Generate static BCrypt password digests in fixtures instead of dynamic ERB expressions.
+
+    Previously, fixtures with password digest attributes used `<%= BCrypt::Password.create("secret") %>`,
+    which regenerated the hash on each test run. Now generates a static hash with a comment
+    showing how to recreate it.
+
+    *Nate Smith*, *Cassia Scheffer*
+
+*   Broaden the `.gitignore` entry when adding a credentials key to ignore all key files.
+
+    *Greg Molnar*
+
 *   Remove unnecessary `ruby-version` input from `ruby/setup-ruby`
 
     *TangRufus*
