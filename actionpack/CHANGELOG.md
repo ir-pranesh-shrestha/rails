@@ -1,3 +1,31 @@
+*   Update `ActionController::Metal::RateLimiting` to support passing method names to `:by` and `:with`
+
+    ```ruby
+    class SignupsController < ApplicationController
+      rate_limit to: 10, within: 1.minute, with: :redirect_with_flash
+
+      private
+        def redirect_with_flash
+          redirect_to root_url, alert: "Too many requests!"
+        end
+    end
+    ```
+
+    *Sean Doyle*
+
+*   Optimize `ActionDispatch::Http::URL.build_host_url` when protocol is included in host.
+
+    When using URL helpers with a host that includes the protocol (e.g., `{ host: "https://example.com" }`),
+    skip unnecessary protocol normalization and string duplication since the extracted protocol is already
+    in the correct format. This eliminates 2 string allocations per URL generation and provides a ~10%
+    performance improvement for this case.
+
+    *Joshua Young*, *Hartley McGuire*
+
+*   Allow `action_controller.logger` to be disabled by setting it to `nil` or `false` instead of always defaulting to `Rails.logger`.
+
+    *Roberto Miranda*
+
 ## Rails 8.1.0.beta1 (September 04, 2025) ##
 
 *   Remove deprecated support to a route to multiple paths.
