@@ -8,12 +8,7 @@ require "active_record/connection_adapters/abstract/connection_pool/reaper"
 
 module ActiveRecord
   module ConnectionAdapters
-    module AbstractPool # :nodoc:
-    end
-
     class NullPool # :nodoc:
-      include ConnectionAdapters::AbstractPool
-
       class NullConfig
         def method_missing(...)
           nil
@@ -36,6 +31,7 @@ module ActiveRecord
       end
 
       def schema_cache; end
+      def query_cache; end
       def connection_descriptor; end
       def checkin(_); end
       def remove(_); end
@@ -229,7 +225,6 @@ module ActiveRecord
 
       include MonitorMixin
       prepend QueryCache::ConnectionPoolConfiguration
-      include ConnectionAdapters::AbstractPool
 
       attr_accessor :automatic_reconnect, :checkout_timeout
       attr_reader :db_config, :max_connections, :min_connections, :max_age, :keepalive, :reaper, :pool_config, :async_executor, :role, :shard
@@ -349,8 +344,9 @@ module ActiveRecord
       # held in a cache keyed by a thread.
       def lease_connection
         lease = connection_lease
-        lease.sticky = true
         lease.connection ||= checkout
+        lease.sticky = true
+        lease.connection
       end
 
       def permanent_lease? # :nodoc:
@@ -368,6 +364,7 @@ module ActiveRecord
         end
 
         @pinned_connection.lock_thread = ActiveSupport::IsolatedExecutionState.context if lock_thread
+        @pinned_connection.pinned = true
         @pinned_connection.verify! # eagerly validate the connection
         @pinned_connection.begin_transaction joinable: false, _lazy: false
       end
@@ -390,6 +387,7 @@ module ActiveRecord
           end
 
           if @pinned_connection.nil?
+            connection.pinned = false
             connection.steal!
             connection.lock_thread = nil
             checkin(connection)

@@ -1,8 +1,49 @@
+*   Add `ActiveRecord::Base.only_columns`
+
+    Similar in use case to `ignored_columns` but listing columns to consider rather than the ones
+    to ignore.
+
+    Can be useful when working with a legacy or shared database schema, or to make safe schema change
+    in two deploys rather than three.
+
+    *Anton Kandratski*
+
+*   Use `PG::Connection#close_prepared` (protocol level Close) to deallocate
+    prepared statements when available.
+
+    To enable its use, you must have pg >= 1.6.0, libpq >= 17, and a PostgreSQL
+    database version >= 17.
+
+    *Hartley McGuire*, *Andrew Jackson*
+
+*   Fix query cache for pinned connections in multi threaded transactional tests
+
+    When a pinned connection is used across separate threads, they now use a separate cache store
+    for each thread.
+
+    This improve accuracy of system tests, and any test using multiple threads.
+
+    *Heinrich Lee Yu*, *Jean Boussier*
+
+*   Fix time attribute dirty tracking with timezone conversions.
+
+    Time-only attributes now maintain a fixed date of 2000-01-01 during timezone conversions,
+    preventing them from being incorrectly marked as changed due to date shifts.
+
+    This fixes an issue where time attributes would be marked as changed when setting the same time value
+    due to timezone conversion causing internal date shifts.
+
+    *Prateek Choudhary*
+
 *   Skip calling `PG::Connection#cancel` in `cancel_any_running_query`
     when using libpq >= 18 with pg < 1.6.0, due to incompatibility.
     Rollback still runs, but may take longer.
 
     *Yasuo Honda*, *Lars Kanis*
+
+*   Don't add `id_value` attribute alias when attribute/column with that name already exists.
+
+    *Rob Lewis*
 
 ## Rails 8.1.0.beta1 (September 04, 2025) ##
 
