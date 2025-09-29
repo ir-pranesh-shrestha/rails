@@ -1,3 +1,39 @@
+*   Fix `NameError` when `class_attribute` is defined on instance singleton classes.
+
+    Previously, calling `class_attribute` on an instance's singleton class would raise
+    a `NameError` when accessing the attribute through the instance.
+
+    ```ruby
+    object = MyClass.new
+    object.singleton_class.class_attribute :foo, default: "bar"
+    object.foo # previously raised NameError, now returns "bar"
+    ```
+
+    *Joshua Young*
+
+*   Introduce `ActiveSupport::Testing::EventReporterAssertions#with_debug_event_reporting`
+    to enable event reporter debug mode in tests.
+
+    The previous way to enable debug mode is by using `#with_debug` on the
+    event reporter itself, which is too verbose. This new helper will help
+    clear up any confusion on how to test debug events.
+
+    *Gannon McGibbon*
+
+*   Add `ActiveSupport::StructuredEventSubscriber` for consuming notifications and
+    emitting structured event logs. Events may be emitted with the `#emit_event`
+    or `#emit_debug_event` methods.
+
+    ```ruby
+    class MyStructuredEventSubscriber < ActiveSupport::StructuredEventSubscriber
+      def notification(event)
+        emit_event("my.notification", data: 1)
+      end
+    end
+    ```
+
+    *Adrianna Chang*
+
 *   `ActiveSupport::FileUpdateChecker` does not depend on `Time.now` to prevent unecessary reloads with time travel test helpers
 
     *Jan Grodowski*

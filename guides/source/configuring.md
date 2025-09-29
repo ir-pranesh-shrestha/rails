@@ -109,7 +109,7 @@ Below are the default values associated with each target version. In cases of co
 
 #### Default Values for Target Version 7.0
 
-- [`config.action_controller.raise_on_open_redirects`](#config-action-controller-raise-on-open-redirects): `true`
+- [`config.action_controller.action_on_open_redirect`](#config-action-controller-action-on-open-redirect): `:raise`
 - [`config.action_controller.wrap_parameters_by_default`](#config-action-controller-wrap-parameters-by-default): `true`
 - [`config.action_dispatch.cookies_serializer`](#config-action-dispatch-cookies-serializer): `:json`
 - [`config.action_dispatch.default_headers`](#config-action-dispatch-default-headers): `{ "X-Frame-Options" => "SAMEORIGIN", "X-XSS-Protection" => "0", "X-Content-Type-Options" => "nosniff", "X-Download-Options" => "noopen", "X-Permitted-Cross-Domain-Policies" => "none", "Referrer-Policy" => "strict-origin-when-cross-origin" }`
@@ -1963,14 +1963,35 @@ with an external host is passed to [redirect_to][]. If an open redirect should
 be allowed, then `allow_other_host: true` can be added to the call to
 `redirect_to`.
 
+| Starting with version | The default value is |
+| --------------------- | -------------------- |
+| (original)            | `false`              |
+
+[redirect_to]: https://api.rubyonrails.org/classes/ActionController/Redirecting.html#method-i-redirect_to
+
+#### `config.action_controller.action_on_open_redirect`
+
+Controls how Rails handles open redirect attempts (redirects to external hosts).
+
+**Note:** This configuration replaces the deprecated [`config.action_controller.raise_on_open_redirects`](#config-action-controller-raise-on-open-redirects)
+option, which will be removed in a future Rails version. The new configuration provides more
+flexible control over open redirect protection.
+
+When set to `:log`, Rails will log a warning when an open redirect is detected.
+When set to `:notify`, Rails will publish an `open_redirect.action_controller`
+notification event. When set to `:raise`, Rails will raise an
+`ActionController::Redirecting::UnsafeRedirectError`.
+
+If `raise_on_open_redirects` is set to `true`, it will take precedence
+over this configuration for backward compatibility, effectively forcing `:raise`
+behavior.
+
 The default value depends on the `config.load_defaults` target version:
 
 | Starting with version | The default value is |
 | --------------------- | -------------------- |
-| (original)            | `false`              |
-| 7.0                   | `true`               |
-
-[redirect_to]: https://api.rubyonrails.org/classes/ActionController/Redirecting.html#method-i-redirect_to
+| (original)            | `:log`               |
+| 7.0                   | `:raise`             |
 
 #### `config.action_controller.action_on_path_relative_redirect`
 
@@ -2303,6 +2324,10 @@ Cookies will be written at the end of a request if they marked as insecure, if t
 If set to `true`, cookies will be written even if this criteria is not met.
 
 This defaults to `true` in `development`, and `false` in all other environments.
+
+#### `config.action_dispatch.verbose_redirect_logs`
+
+Specifies if source locations of redirects should be logged below relevant log lines. By default, the flag is `true` in development and `false` in all other environments.
 
 #### `ActionDispatch::Callbacks.before`
 
