@@ -10,16 +10,11 @@ module ActiveStorage
   # Wraps the Google Cloud Storage as an Active Storage service. See ActiveStorage::Service for the generic API
   # documentation that applies to all services.
   class Service::GCSService < Service
-    attr_reader :client, :bucket
     class MetadataServerError < ActiveStorage::Error; end
     class MetadataServerNotFoundError < ActiveStorage::Error; end
 
     def initialize(public: false, **config)
-      @client = Google::Cloud::Storage.new(**config.except(:bucket, :cache_control, :iam, :gsa_email))
-      @bucket = @client.bucket(config.fetch(:bucket), skip_lookup: true)
-
       @public = public
-
       @config = config
     end
 
@@ -149,6 +144,14 @@ module ActiveStorage
       end
     end
 
+    def bucket
+      @bucket ||= client.bucket(@config.fetch(:bucket), skip_lookup: true)
+    end
+
+    def client
+      @client ||= Google::Cloud::Storage.new(**@config.except(:bucket, :cache_control, :iam, :gsa_email))
+    end
+
     private
       def private_url(key, expires_in:, filename:, content_type:, disposition:, **)
         args = {
@@ -170,9 +173,6 @@ module ActiveStorage
       def public_url(key, **)
         file_for(key).public_url
       end
-
-
-      attr_reader :config
 
       def file_for(key, skip_lookup: true)
         bucket.file(key, skip_lookup: skip_lookup)
