@@ -16,7 +16,7 @@ module Rails
       include AppName
       include BundleHelper
 
-      NODE_LTS_VERSION = "20.11.1"
+      NODE_LTS_VERSION = "22.21.1"
       BUN_VERSION = "1.0.1"
 
       JAVASCRIPT_OPTIONS = %w( importmap bun webpack esbuild rollup )
@@ -534,6 +534,10 @@ module Rails
 
       def using_bun?
         using_js_runtime? && %w[bun].include?(options[:javascript])
+      end
+
+      def using_css_bundling?
+        css_gemfile_entry&.name == "cssbundling-rails"
       end
 
       def capture_command(command, pattern = nil)
